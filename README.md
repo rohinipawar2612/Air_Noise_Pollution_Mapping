@@ -34,10 +34,6 @@ The main objective of this project is to provide an interactive platform for mon
 - Provides interactive map-based information.
 - Supports pollution data management.
 
-## 🌐 Live Demo
-
-[Click Here to View Project](https://rohinipawar2612.github.io/Air_Noise_Pollution_Mapping/)
-
 ## 👩‍💻 Developer
 
 Developed as an academic project.
