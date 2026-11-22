@@ -38,14 +38,6 @@ The main objective of this project is to provide an interactive platform for mon
 
 [Click Here to View Project](https://rohinipawar2612.github.io/Air_Noise_Pollution_Mapping/)
 
-## ⚙️ Installation
-
-1. Clone the repository.
-2. Open the project folder.
-3. Install required packages using `pip install flask`.
-4. Run the application using `python app.py`.
-5. Open `http://127.0.0.1:5000/` in your browser.
-
 ## 👩‍💻 Developer
 
 Developed as an academic project.
