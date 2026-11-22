@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Pollution Dashboard</title>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f7fb;
+            color: #222;
+        }
+
+        /* NAVBAR */
+        .navbar {
+            width: 100%;
+            background: #17324d;
+            color: white;
+            padding: 14px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar h2 {
+            margin: 0;
+            font-size: 21px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: white;
+            background: #24577d;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .nav-links a:hover {
+            background: #3279a8;
+        }
+
+        /* MAIN CONTAINER */
+        .container {
+            width: 90%;
+            max-width: 1100px;
+            margin: 25px auto;
+        }
+
+        .page-title {
+            text-align: center;
+            margin-bottom: 22px;
+        }
+
+        .page-title h1 {
+            margin: 0;
+            color: #17324d;
+            font-size: 28px;
+        }
+
+        .page-title p {
+            margin-top: 7px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* SUMMARY CARDS */
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 22px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 18px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-top: 4px solid #24577d;
+        }
+
+        .card h3 {
+            margin: 0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .card .number {
+            margin-top: 8px;
+            font-size: 25px;
+            font-weight: bold;
+            color: #17324d;
+        }
+
+        /* CHARTS */
+        .charts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-bottom: 22px;
+        }
+
+        .chart-box {
+            background: white;
+            padding: 18px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .chart-box h3 {
+            margin-top: 0;
+            margin-bottom: 12px;
+            color: #17324d;
+            font-size: 17px;
+        }
+
+        .chart-container {
+            height: 270px;
+        }
+
+        /* TABLE SECTION */
+        .table-box {
+            background: white;
+            padding: 18px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 22px;
+        }
+
+        .table-box h2 {
+            margin-top: 0;
+            color: #17324d;
+            font-size: 20px;
+        }
+
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 700px;
+        }
+
+        th {
+            background: #17324d;
+            color: white;
+            padding: 10px;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        td {
+            padding: 9px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        tr:hover {
+            background: #f5f8fb;
+        }
+
+        .noise-value {
+            font-weight: bold;
+        }
+
+        .aqi-value {
+            font-weight: bold;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 20px;
+            color: #777;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 850px) {
+
+            .cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .charts {
+                grid-template-columns: 1fr;
+            }
+
+            .navbar {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+
+        @media (max-width: 500px) {
+
+            .container {
+                width: 94%;
+            }
+
+            .cards {
+                grid-template-columns: 1fr;
+            }
+
+            .page-title h1 {
+                font-size: 23px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<div class="navbar">
+
+    <h2>Air & Noise Pollution Mapping</h2>
+
+    <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/data-collection">Data Collection</a>
+        <a href="/map">Pollution Map</a>
+    </div>
+
+</div>
+
+
+<div class="container">
+
+    <!-- TITLE -->
+    <div class="page-title">
+        <h1>Pollution Dashboard</h1>
+        <p>Air and Noise Pollution Monitoring & Visualization</p>
+    </div>
+
+
+    <!-- SUMMARY CARDS -->
+    <div class="cards">
+
+        <!-- Noise Records -->
+        <div class="card">
+            <h3>Noise Records</h3>
+
+            <div class="number" id="noiseCount">
+                0
+            </div>
+        </div>
+
+
+        <!-- Average Noise -->
+        <div class="card">
+            <h3>Average Noise</h3>
+
+            <div class="number" id="averageNoise">
+                0 dB
+            </div>
+        </div>
+
+
+        <!-- Air Records -->
+        <div class="card">
+            <h3>Air Records</h3>
+
+            <div class="number" id="airCount">
+                0
+            </div>
+        </div>
+
+
+        <!-- Average AQI -->
+        <div class="card">
+            <h3>Average AQI</h3>
+
+            <div class="number" id="averageAQI">
+                0
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- CHARTS -->
+    <div class="charts">
+
+        <!-- NOISE CHART -->
+        <div class="chart-box">
+
+            <h3>Noise Pollution by Location</h3>
+
+            <div class="chart-container">
+                <canvas id="noiseChart"></canvas>
+            </div>
+
+        </div>
+
+
+        <!-- AIR CHART -->
+        <div class="chart-box">
+
+            <h3>Air Pollution by Location</h3>
+
+            <div class="chart-container">
+                <canvas id="airChart"></canvas>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- NOISE TABLE -->
+    <div class="table-box">
+
+        <h2>Noise Pollution Data</h2>
+
+        <div class="table-wrapper">
+
+            <table id="noiseTable">
+
+                <thead>
+                    <tr>
+                        <th>Location</th>
+                        <th>Noise Level</th>
+                        <th>Source</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for record in noise_records %}
+
+                    <tr
+                        data-location="{{ record['location'] }}"
+                        data-noise="{{ record['noise_level'] }}"
+                    >
+
+                        <td>{{ record['location'] }}</td>
+
+                        <td class="noise-value">
+                            {{ record['noise_level'] }} dB
+                        </td>
+
+                        <td>
+                            {{ record['source'] }}
+                        </td>
+
+                        <td>
+                            {{ record['date'] }}
+                        </td>
+
+                        <td>
+                            {{ record['time'] }}
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+            {% if not noise_records %}
+                <div class="empty">
+                    No Noise Data Available
+                </div>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- AIR TABLE -->
+    <div class="table-box">
+
+        <h2>Air Pollution Data</h2>
+
+        <div class="table-wrapper">
+
+            <table id="airTable">
+
+                <thead>
+
+                    <tr>
+                        <th>Location</th>
+                        <th>AQI</th>
+                        <th>PM2.5</th>
+                        <th>Air Quality</th>
+                        <th>Source</th>
+                        <th>Data Type</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for record in air_records %}
+
+                    <tr
+                        data-location="{{ record['location'] }}"
+                        data-aqi="{{ record['aqi'] }}"
+                    >
+
+                        <td>
+                            {{ record['location'] }}
+                        </td>
+
+                        <td class="aqi-value">
+                            {{ record['aqi'] }}
+                        </td>
+
+                        <td>
+                            {{ record['pm25'] }} µg/m³
+                        </td>
+
+                        <td>
+                            {{ record['air_quality'] }}
+                        </td>
+
+                        <td>
+                            {{ record['source'] }}
+                        </td>
+
+                        <td>
+                            {{ record['data_type'] }}
+                        </td>
+
+                        <td>
+                            {{ record['date'] }}
+                        </td>
+
+                        <td>
+                            {{ record['time'] }}
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+            {% if not air_records %}
+                <div class="empty">
+                    No Air Data Available
+                </div>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- JAVASCRIPT -->
+<script>
+
+    /* =========================
+       NOISE DATA
+    ========================= */
+
+    const noiseRows = document.querySelectorAll(
+        "#noiseTable tbody tr"
+    );
+
+    let noiseLabels = [];
+    let noiseValues = [];
+
+    noiseRows.forEach(function(row) {
+
+        const location = row.dataset.location;
+        const noise = Number(row.dataset.noise);
+
+        if (location && !isNaN(noise)) {
+
+            noiseLabels.push(location);
+            noiseValues.push(noise);
+
+        }
+
+    });
+
+
+    /* =========================
+       AIR DATA
+    ========================= */
+
+    const airRows = document.querySelectorAll(
+        "#airTable tbody tr"
+    );
+
+    let airLabels = [];
+    let airValues = [];
+
+    airRows.forEach(function(row) {
+
+        const location = row.dataset.location;
+        const aqi = Number(row.dataset.aqi);
+
+        if (location && !isNaN(aqi)) {
+
+            airLabels.push(location);
+            airValues.push(aqi);
+
+        }
+
+    });
+
+
+    /* =========================
+       SUMMARY
+    ========================= */
+
+    document.getElementById("noiseCount").textContent =
+        noiseValues.length;
+
+
+    document.getElementById("airCount").textContent =
+        airValues.length;
+
+
+    let noiseAverage = 0;
+
+    if (noiseValues.length > 0) {
+
+        let noiseTotal = 0;
+
+        noiseValues.forEach(function(value) {
+            noiseTotal += value;
+        });
+
+        noiseAverage =
+            noiseTotal / noiseValues.length;
+    }
+
+
+    document.getElementById("averageNoise").textContent =
+        noiseAverage.toFixed(1) + " dB";
+
+
+    let airAverage = 0;
+
+    if (airValues.length > 0) {
+
+        let airTotal = 0;
+
+        airValues.forEach(function(value) {
+            airTotal += value;
+        });
+
+        airAverage =
+            airTotal / airValues.length;
+    }
+
+
+    document.getElementById("averageAQI").textContent =
+        airAverage.toFixed(1);
+
+
+    /* =========================
+       NOISE CHART
+    ========================= */
+
+    const noiseCanvas =
+        document.getElementById("noiseChart");
+
+
+    new Chart(noiseCanvas, {
+
+        type: "bar",
+
+        data: {
+
+            labels: noiseLabels,
+
+            datasets: [{
+
+                label: "Noise Level (dB)",
+
+                data: noiseValues,
+
+                borderWidth: 1
+
+            }]
+
+        },
+
+        options: {
+
+            responsive: true,
+
+            maintainAspectRatio: false,
+
+            scales: {
+
+                y: {
+
+                    beginAtZero: true,
+
+                    title: {
+
+                        display: true,
+
+                        text: "Noise Level (dB)"
+
+                    }
+
+                },
+
+                x: {
+
+                    title: {
+
+                        display: true,
+
+                        text: "Location"
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    });
+
+
+    /* =========================
+       AIR CHART
+    ========================= */
+
+    const airCanvas =
+        document.getElementById("airChart");
+
+
+    new Chart(airCanvas, {
+
+        type: "bar",
+
+        data: {
+
+            labels: airLabels,
+
+            datasets: [{
+
+                label: "AQI",
+
+                data: airValues,
+
+                borderWidth: 1
+
+            }]
+
+        },
+
+        options: {
+
+            responsive: true,
+
+            maintainAspectRatio: false,
+
+            scales: {
+
+                y: {
+
+                    beginAtZero: true,
+
+                    title: {
+
+                        display: true,
+
+                        text: "AQI"
+
+                    }
+
+                },
+
+                x: {
+
+                    title: {
+
+                        display: true,
+
+                        text: "Location"
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    });
+
+</script>
+
+</body>
+</html>

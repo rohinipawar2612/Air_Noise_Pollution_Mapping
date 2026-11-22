@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Pollution Mapping</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f7f9;
+            color: #222;
+        }
+
+        /* ================= NAVBAR ================= */
+
+        nav {
+            background: #12343b;
+            color: white;
+            padding: 18px 30px;
+
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        nav h2 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-left: 25px;
+            font-weight: bold;
+        }
+
+        nav a:hover {
+            color: #ffd166;
+        }
+
+
+        /* ================= PAGE ================= */
+
+        .container {
+            text-align: center;
+            padding: 25px 20px;
+        }
+
+        .container h1 {
+            color: #12343b;
+            font-size: 36px;
+            margin: 5px 0 10px;
+        }
+
+        .container p {
+            color: #555;
+            font-size: 17px;
+            margin-bottom: 20px;
+        }
+
+
+        /* ================= MAP ================= */
+
+        .map-scroll {
+            width: 82%;
+            height: 430px;
+
+            margin: auto;
+
+            overflow: auto;
+
+            border: 2px solid #222;
+            border-radius: 16px;
+
+            background: #ddd;
+
+            box-shadow:
+                0 5px 15px rgba(0,0,0,0.18);
+        }
+
+        #map {
+            width: 1600px;
+            height: 700px;
+
+            min-width: 1600px;
+            min-height: 700px;
+        }
+
+
+        /* ================= BUTTONS ================= */
+
+        .filter-buttons {
+            width: 82%;
+
+            margin: 20px auto;
+
+            display: flex;
+            justify-content: center;
+
+            gap: 18px;
+        }
+
+        .filter-btn {
+            padding: 12px 28px;
+
+            border-radius: 25px;
+
+            font-size: 16px;
+            font-weight: bold;
+
+            cursor: pointer;
+
+            background: white;
+
+            transition: 0.2s;
+
+            box-shadow:
+                0 3px 8px rgba(0,0,0,0.15);
+        }
+
+
+        /* Noise */
+
+        .noise-btn {
+            color: red;
+            border: 2px solid red;
+        }
+
+        .noise-btn.active {
+            background: red;
+            color: white;
+        }
+
+
+        /* Air */
+
+        .air-btn {
+            color: blue;
+            border: 2px solid blue;
+        }
+
+        .air-btn.active {
+            background: blue;
+            color: white;
+        }
+
+
+        .filter-btn:hover {
+            transform: translateY(-2px);
+        }
+
+
+        /* ================= CUSTOM MARKERS ================= */
+
+        .noise-marker {
+            background: red;
+
+            width: 32px;
+            height: 32px;
+
+            border-radius: 50% 50% 50% 0;
+
+            transform: rotate(-45deg);
+
+            border: 3px solid white;
+
+            box-shadow:
+                0 2px 6px rgba(0,0,0,0.4);
+        }
+
+        .noise-marker::after {
+            content: "";
+
+            position: absolute;
+
+            width: 10px;
+            height: 10px;
+
+            background: white;
+
+            border-radius: 50%;
+
+            top: 8px;
+            left: 8px;
+        }
+
+
+        .air-marker {
+            background: blue;
+
+            width: 32px;
+            height: 32px;
+
+            border-radius: 50% 50% 50% 0;
+
+            transform: rotate(-45deg);
+
+            border: 3px solid white;
+
+            box-shadow:
+                0 2px 6px rgba(0,0,0,0.4);
+        }
+
+        .air-marker::after {
+            content: "";
+
+            position: absolute;
+
+            width: 10px;
+            height: 10px;
+
+            background: white;
+
+            border-radius: 50%;
+
+            top: 8px;
+            left: 8px;
+        }
+
+
+        /* ================= POPUP ================= */
+
+        .location-popup {
+            min-width: 230px;
+
+            font-family: Arial, sans-serif;
+        }
+
+        .location-popup h3 {
+            margin: 0 0 10px 0;
+
+            font-size: 18px;
+        }
+
+        .location-popup p {
+            margin: 7px 0;
+
+            font-size: 14px;
+
+            color: #222;
+        }
+
+
+        /* ================= LEGEND ================= */
+
+        .legend {
+            background: white;
+
+            padding: 15px 20px;
+
+            border-radius: 12px;
+
+            box-shadow:
+                0 3px 12px rgba(0,0,0,0.25);
+
+            line-height: 30px;
+
+            font-size: 15px;
+        }
+
+        .legend-title {
+            font-weight: bold;
+            font-size: 17px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .red-dot {
+            width: 18px;
+            height: 18px;
+
+            background: red;
+
+            border-radius: 50%;
+
+            display: inline-block;
+        }
+
+        .blue-dot {
+            width: 18px;
+            height: 18px;
+
+            background: blue;
+
+            border-radius: 50%;
+
+            display: inline-block;
+        }
+
+
+        /* ================= INFO CARDS ================= */
+
+        .info-container {
+            width: 82%;
+
+            margin: 30px auto;
+
+            display: flex;
+
+            gap: 25px;
+        }
+
+        .info-card {
+            flex: 1;
+
+            background: white;
+
+            padding: 22px;
+
+            border-radius: 15px;
+
+            text-align: left;
+
+            box-shadow:
+                0 3px 12px rgba(0,0,0,0.12);
+        }
+
+        .info-card h2 {
+            margin-top: 0;
+        }
+
+        .noise-title {
+            color: red;
+        }
+
+        .air-title {
+            color: blue;
+        }
+
+
+        /* ================= MOBILE ================= */
+
+        @media (max-width: 768px) {
+
+            nav {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            nav a {
+                margin: 5px;
+                font-size: 14px;
+            }
+
+            .container h1 {
+                font-size: 28px;
+            }
+
+            .map-scroll {
+                width: 94%;
+                height: 360px;
+            }
+
+            #map {
+                width: 1200px;
+                height: 600px;
+
+                min-width: 1200px;
+                min-height: 600px;
+            }
+
+            .filter-buttons {
+                width: 94%;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .filter-btn {
+                width: 230px;
+            }
+
+            .info-container {
+                width: 94%;
+                flex-direction: column;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- ================= NAVBAR ================= -->
+
+    <nav>
+
+        <h2>
+            🌍 Air & Noise Pollution Mapping
+        </h2>
+
+        <div>
+
+            <a href="/">Home</a>
+
+            <a href="/dashboard">
+                Dashboard
+            </a>
+
+            <a href="/map">
+                Pollution Map
+            </a>
+
+            <a href="/data-collection">
+                Data Collection
+            </a>
+
+        </div>
+
+    </nav>
+
+
+    <!-- ================= MAIN ================= -->
+
+    <div class="container">
+
+        <h1>
+            🗺️ Air & Noise Pollution Map
+        </h1>
+
+        <p>
+            Locality-wise pollution data visualization
+        </p>
+
+
+        <!-- MAP -->
+
+        <div class="map-scroll">
+
+            <div id="map"></div>
+
+        </div>
+
+
+        <!-- BUTTONS -->
+
+        <div class="filter-buttons">
+
+            <button
+                id="noiseButton"
+                class="filter-btn noise-btn active"
+                onclick="toggleNoise()">
+
+                🔴 Noise Pollution
+
+            </button>
+
+
+            <button
+                id="airButton"
+                class="filter-btn air-btn active"
+                onclick="toggleAir()">
+
+                🔵 Air Pollution
+
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================= INFO ================= -->
+
+    <div class="info-container">
+
+        <div class="info-card">
+
+            <h2 class="noise-title">
+                🔊 Noise Pollution
+            </h2>
+
+            <p>
+                Red location pins show noise pollution observations.
+            </p>
+
+            <p>
+                Click a red pin to view noise level,
+                source, date and time.
+            </p>
+
+        </div>
+
+
+        <div class="info-card">
+
+            <h2 class="air-title">
+                🌫️ Air Pollution
+            </h2>
+
+            <p>
+                Blue location pins show air pollution observations.
+            </p>
+
+            <p>
+                Click a blue pin to view AQI,
+                PM2.5, air quality and source.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================= LEAFLET ================= -->
+
+    <script
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+    </script>
+
+
+    <script>
+
+        /* ================= MAP ================= */
+
+        const map = L.map("map").setView(
+            [16.055, 73.718],
+            12
+        );
+
+
+        L.tileLayer(
+            "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+            {
+                maxZoom: 19,
+
+                attribution:
+                    '&copy; OpenStreetMap contributors'
+            }
+        ).addTo(map);
+
+
+        /* ================= LAYERS ================= */
+
+        const noiseLayer =
+            L.layerGroup().addTo(map);
+
+        const airLayer =
+            L.layerGroup().addTo(map);
+
+
+        /* ================= LOAD DATA ================= */
+
+        fetch("/api/pollution")
+
+            .then(function(response) {
+
+                if (!response.ok) {
+                    throw new Error("API Error");
+                }
+
+                return response.json();
+
+            })
+
+
+            .then(function(data) {
+
+                console.log(
+                    "Pollution Data:",
+                    data
+                );
+
+
+                /* ================= NOISE ================= */
+
+                data.noise.forEach(function(item) {
+
+                    const latitude =
+                        Number(item.latitude);
+
+                    const longitude =
+                        Number(item.longitude);
+
+
+                    const noiseIcon =
+                        L.divIcon({
+
+                            className: "",
+
+                            html:
+                                '<div class="noise-marker"></div>',
+
+                            iconSize: [32, 32],
+
+                            iconAnchor: [16, 32],
+
+                            popupAnchor: [0, -32]
+
+                        });
+
+
+                    const marker =
+                        L.marker(
+
+                            [
+                                latitude,
+                                longitude
+                            ],
+
+                            {
+                                icon: noiseIcon
+                            }
+
+                        );
+
+
+                    marker.bindPopup(`
+
+                        <div class="location-popup">
+
+                            <h3 style="color:red;">
+                                📍 ${item.location}
+                            </h3>
+
+                            <hr>
+
+                            <p>
+                                <b>Noise Level:</b>
+                                ${item.noise_level} dB
+                            </p>
+
+                            <p>
+                                <b>Observed Source:</b>
+                                ${item.source}
+                            </p>
+
+                            <p>
+                                <b>Date:</b>
+                                ${item.date}
+                            </p>
+
+                            <p>
+                                <b>Time:</b>
+                                ${item.time}
+                            </p>
+
+                            <p>
+                                <b>Coordinates:</b><br>
+                                ${item.latitude},
+                                ${item.longitude}
+                            </p>
+
+                        </div>
+
+                    `);
+
+
+                    marker.addTo(noiseLayer);
+
+                });
+
+
+                /* ================= AIR ================= */
+
+                data.air.forEach(function(item) {
+
+                    const latitude =
+                        Number(item.latitude);
+
+                    const longitude =
+                        Number(item.longitude);
+
+
+                    const airIcon =
+                        L.divIcon({
+
+                            className: "",
+
+                            html:
+                                '<div class="air-marker"></div>',
+
+                            iconSize: [32, 32],
+
+                            iconAnchor: [16, 32],
+
+                            popupAnchor: [0, -32]
+
+                        });
+
+
+                    const marker =
+                        L.marker(
+
+                            [
+                                latitude,
+                                longitude
+                            ],
+
+                            {
+                                icon: airIcon
+                            }
+
+                        );
+
+
+                    marker.bindPopup(`
+
+                        <div class="location-popup">
+
+                            <h3 style="color:blue;">
+                                📍 ${item.location}
+                            </h3>
+
+                            <hr>
+
+                            <p>
+                                <b>AQI:</b>
+                                ${item.aqi}
+                            </p>
+
+                            <p>
+                                <b>PM2.5:</b>
+                                ${item.pm25} µg/m³
+                            </p>
+
+                            <p>
+                                <b>Air Quality:</b>
+                                ${item.air_quality}
+                            </p>
+
+                            <p>
+                                <b>Source:</b>
+                                ${item.source}
+                            </p>
+
+                            <p>
+                                <b>Data Type:</b>
+                                ${item.data_type}
+                            </p>
+
+                            <p>
+                                <b>Date:</b>
+                                ${item.date}
+                            </p>
+
+                            <p>
+                                <b>Time:</b>
+                                ${item.time}
+                            </p>
+
+                            <p>
+                                <b>Coordinates:</b><br>
+                                ${item.latitude},
+                                ${item.longitude}
+                            </p>
+
+                        </div>
+
+                    `);
+
+
+                    marker.addTo(airLayer);
+
+                });
+
+
+                console.log(
+                    "✅ Noise and Air markers loaded successfully!"
+                );
+
+            })
+
+
+            .catch(function(error) {
+
+                console.error(
+                    "Map Error:",
+                    error
+                );
+
+            });
+
+
+        /* ================= NOISE BUTTON ================= */
+
+        function toggleNoise() {
+
+            const button =
+                document.getElementById(
+                    "noiseButton"
+                );
+
+
+            if (map.hasLayer(noiseLayer)) {
+
+                map.removeLayer(noiseLayer);
+
+                button.classList.remove(
+                    "active"
+                );
+
+            }
+
+            else {
+
+                noiseLayer.addTo(map);
+
+                button.classList.add(
+                    "active"
+                );
+
+            }
+
+        }
+
+
+        /* ================= AIR BUTTON ================= */
+
+        function toggleAir() {
+
+            const button =
+                document.getElementById(
+                    "airButton"
+                );
+
+
+            if (map.hasLayer(airLayer)) {
+
+                map.removeLayer(airLayer);
+
+                button.classList.remove(
+                    "active"
+                );
+
+            }
+
+            else {
+
+                airLayer.addTo(map);
+
+                button.classList.add(
+                    "active"
+                );
+
+            }
+
+        }
+
+
+        /* ================= LEGEND ================= */
+
+        const legend =
+            L.control({
+                position: "bottomright"
+            });
+
+
+        legend.onAdd =
+            function() {
+
+                const div =
+                    L.DomUtil.create(
+                        "div",
+                        "legend"
+                    );
+
+
+                div.innerHTML = `
+
+                    <div class="legend-title">
+                        Map Legend
+                    </div>
+
+                    <div class="legend-item">
+
+                        <span class="red-dot"></span>
+
+                        Noise Pollution
+
+                    </div>
+
+                    <div class="legend-item">
+
+                        <span class="blue-dot"></span>
+
+                        Air Pollution
+
+                    </div>
+
+                `;
+
+
+                return div;
+
+            };
+
+
+        legend.addTo(map);
+
+
+    </script>
+
+
+</body>
+
+</html>
